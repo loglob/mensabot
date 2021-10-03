@@ -11,7 +11,7 @@ using System.Collections.Generic;
 namespace mensabot
 {
 	static class Menu
-    {
+	{
 		private const string api = "https://www.mensa-kl.de/api.php?date=1&format=json";
 
 		[JsonObject(MemberSerialization.OptIn)]
