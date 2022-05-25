@@ -1,3 +1,4 @@
 #!/bin/sh
 cd "$(dirname "$(realpath $0)")"
-dotnet run
+mkdir -p ./logs
+dotnet run 2>&1 | tee `date +./logs/mensabot_%F_%X.log`
