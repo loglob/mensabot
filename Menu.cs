@@ -18,7 +18,7 @@ namespace mensabot
 		public class Essen
 		{
 			public readonly int Votes;
-			
+
 			[JsonProperty("title")]
 			public readonly string Ausgabe;
 
@@ -63,9 +63,9 @@ namespace mensabot
 			public Essen(string title, string price, string rating, string rating_amt, string image, string loc)
 			{
 				this.Name = title.squeeze();
-				this.Preis = double.Parse(price);
-				this.Rating = double.Parse(rating);
-				this.Votes = int.Parse(rating_amt);
+				double.TryParse(price, out this.Preis);
+				double.TryParse(rating, out this.Rating);
+				int.TryParse(rating_amt, out this.Votes);
 				this.Image = string.IsNullOrEmpty(image) ? null : $"https://www.mensa-kl.de/mimg/{image}";
 				this.Ausgabe = int.TryParse(loc, out int a) ? $"Ausgabe {a}" : loc;
 			}
