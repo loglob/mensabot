@@ -81,15 +81,25 @@ namespace mensabot
 
 		public static async Task<IEnumerable<Essen>> GetEssenAsync()
 		{
-			using(var r = await new HttpClient().GetAsync(api).Result.Content.ReadAsStreamAsync())
-			using(var tr = new StreamReader(r))
-			using(var jr = new JsonTextReader(tr))
-			{
-				var m = new JsonSerializer().Deserialize<List<Essen>>(jr);
-				m.RemoveAll(e => e.Ausgabe == "Unique");
+			var resp = new HttpClient().GetAsync(api).Result.Content;
 
-				return m;
+			try
+			{
+				using(var r = await resp.ReadAsStreamAsync())
+				using(var tr = new StreamReader(r))
+				using(var jr = new JsonTextReader(tr))
+				{
+					var m = new JsonSerializer().Deserialize<List<Essen>>(jr);
+					m.RemoveAll(e => e.Ausgabe == "Unique");
+
+					return m;
+				}
 			}
+			catch(Exception ex) when (ex is JsonException || ex is FormatException)
+			{
+				throw new FormatException($"Expected valid JSON, got '{await resp.ReadAsStringAsync()}'", ex);
+			}
+
 		}
 	}
 }
