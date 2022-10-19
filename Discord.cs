@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Text;
 using System;
-using System.Linq;
 
 namespace mensabot
 {
@@ -22,34 +21,22 @@ namespace mensabot
 			}
 		}
 
-		private static async Task Post(this string url, object data)
+		private static async Task Post(string webhook, object data)
 		{
 			var r = await new HttpClient()
-				.PostAsync(url, new StringContent(data.ToJson(), Encoding.UTF8, "application/json"));
+				.PostAsync(webhook, new StringContent(data.ToJson(), Encoding.UTF8, "application/json"));
 
 			if(!r.IsSuccessStatusCode)
-				Console.WriteLine($"Failed to POST {url}, Response:\n{r}");
+				Console.WriteLine($"Failed to POST {webhook}, Response:\n{r}");
 		}
 
-		private static async Task Post(this IEnumerable<string> urls, object data)
+		public static async Task SendEmbed(string webhook, string msg, IEnumerable<object> embed)
 		{
-			foreach (var url in urls)
-				await url.Post(data);
-		}
-
-		private static IEnumerable<string> webhooks
-			=> File.ReadLines("webhooks")
-				.Select(ln => ln.Trim())
-				.Where(ln => ln.Length > 0 && ln[0] != '#');
-
-		public static async Task SendEmbed(string msg, IEnumerable<object> embed)
-		{
-			await webhooks.Post(new Dictionary<string,object>{
+			await Post(webhook, new Dictionary<string,object>{
 				{ "content", msg },
 				{ "username", "Mensa Bot" },
 				{ "embeds", embed }
 			});
 		}
-		
 	}
 }

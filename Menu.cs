@@ -4,8 +4,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
-using System.Text.RegularExpressions;
-using System.Linq;
 using System.Collections.Generic;
 
 namespace mensabot
@@ -74,10 +72,8 @@ namespace mensabot
 				=> $"> {Name} für {Preis.ToString("0.00")}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
 		}
 
-		private static readonly Regex squeezeRegex = new Regex(@"\S+", RegexOptions.Compiled);
-
 		private static string squeeze(this string str)
-			=> string.Join(" ", squeezeRegex.Matches(str));
+			=> string.Join(' ', str.Split(null as string, StringSplitOptions.RemoveEmptyEntries));
 
 		public static async Task<IEnumerable<Essen>> GetEssenAsync()
 		{
@@ -89,10 +85,7 @@ namespace mensabot
 				using(var tr = new StreamReader(r))
 				using(var jr = new JsonTextReader(tr))
 				{
-					var m = new JsonSerializer().Deserialize<List<Essen>>(jr);
-					m.RemoveAll(e => e.Ausgabe == "Unique");
-
-					return m;
+					return new JsonSerializer().Deserialize<Essen[]>(jr);
 				}
 			}
 			catch(Exception ex) when (ex is JsonException || ex is FormatException)
