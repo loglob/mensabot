@@ -45,12 +45,16 @@ namespace mensabot
 				}
 			}
 
+			private EmbedField für => ("für", Preis.ToString("0.00€"));
+
 			[JsonProperty("fields")]
 			public EmbedField[] EmbedFields
-				=> new EmbedField[]{
-					("für", Preis.ToString("0.00€")),
+				=> Votes > 0 ? new EmbedField[] {
+					für,
 					("rating", Stars),
 					("votes", Votes)
+				} : new EmbedField[] {
+					für
 				};
 
 			[JsonProperty("image", NullValueHandling=NullValueHandling.Ignore)]
