@@ -8,9 +8,9 @@ namespace mensabot
 
 	class Program
 	{
-		public record ServerEntry(string Webhook, string[] MenuBlacklist = null);
+		public record ServerEntry(string Webhook, string[] MenuBlacklist = null, string[] MenuWhitelist = null, string Message = null);
 
-		public static ServerEntry[] Servers;
+		const string DefaultMessage = "**Morgen gibt es:**";
 
 		static async Task MainAsync()
 		{
@@ -20,7 +20,9 @@ namespace mensabot
 
 				foreach(var server in new JsonSerializer().Deserialize<ServerEntry[]>(new JsonTextReader(f)))
 				{
-					await Discord.SendEmbed(server.Webhook, "**Morgen gibt es:**", essen
+					await Discord.SendEmbed(server.Webhook, server.Message ?? DefaultMessage, essen
+						.Where(e => server.MenuWhitelist is null
+							|| server.MenuWhitelist.Any(m => e.Ausgabe.ToLower() == m.ToLower()))
 						.Where(e => server.MenuBlacklist is null
 							|| server.MenuBlacklist.All(m => e.Ausgabe.ToLower() != m.ToLower())));
 				}
