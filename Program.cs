@@ -18,6 +18,9 @@ namespace mensabot
 			{
 				var essen = await Menu.GetEssenAsync();
 
+				if(! essen.Any())
+					return;
+
 				foreach(var server in new JsonSerializer().Deserialize<ServerEntry[]>(new JsonTextReader(f)))
 				{
 					await Discord.SendEmbed(server.Webhook, server.Message ?? DefaultMessage, essen
