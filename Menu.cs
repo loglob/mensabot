@@ -1,16 +1,16 @@
-
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.IO;
+using System;
 using System.Collections.Generic;
-using static mensabot.Discord;
-using System.Text;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace mensabot
 {
+	using static mensabot.Discord;
+	
 	static class Menu
 	{
 		private const string api = "https://www.mensa-kl.de/api.php?date=1&format=json";
@@ -57,7 +57,7 @@ namespace mensabot
 			private Uri? ImageUrl => string.IsNullOrEmpty(Image) ? null : new Uri(imageBaseUri, Image);
 
 			/** Processes `RawTitle` so that each group of parenthesis is filtered for the given allergens only */
-			private string processTitle(HashSet<string> allergens)
+			private string processTitle(Filter allergens)
 			{
 				StringBuilder res = new();
 
@@ -87,7 +87,7 @@ namespace mensabot
 						throw new FormatException("Menu title has unmatched parentheses");
 
 					off = r + 1;
-					var al = RawTitle.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Contains).ToList();
+					var al = RawTitle.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Allows).ToList();
 
 					if(al.Count == 0)
 						continue;
@@ -133,7 +133,7 @@ namespace mensabot
 			public override string ToString()
 				=> $"> {RawTitle} für {Price:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
 
-			public Embed ToEmbed(HashSet<string> allergens)
+			public Embed ToEmbed(Filter allergens)
 			{
 				EmbedField für = new("für", Price.ToString("0.00€"));
 
@@ -142,8 +142,8 @@ namespace mensabot
 					processTitle(allergens),
 					Votes > 0 ? [
 						für,
-						("rating", Stars),
-						("votes", Votes)
+						new("rating", Stars),
+						new("votes", Votes.ToString())
 					] : [
 						für
 					],

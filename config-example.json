@@ -8,11 +8,12 @@
 		// (optional) Set a custom message to write before the menu:
 		// "message": "Tomorrow's menu:",
 		
-		// (optional) Configure which menus should be hidden:
-		"menuBlacklist": [ "bistro36", "unique", "fraunhofer" ]
-		// alternatively, configure which menus should be shown:
+		// (optional) Configure which menus should be shown (all by default):
 		// "menuWhitelist": [ "Abend" ]
+		// "menuBlacklist": [ "bistro36", "unique", "fraunhofer" ]
 
-		// (optional) Configure which allergens should be shown:
-		// "Allergens": [ "la" ]	}
+		// (optional) Configure which allergens should be shown (none by default):
+		// "AllergenWhitelist": [ "la" ]
+		// "AllergenBlacklist": [ 1,2,3,4,5 ]
+	}
 ]
