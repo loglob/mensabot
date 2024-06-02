@@ -14,30 +14,19 @@ static class Discord
 {
 	public record Embed(string Title, string? Description, EmbedField[] Fields, EmbedImage? Image);
 	public record EmbedField(string Name, string Value, bool Inline = true);
-	public record EmbedImage(Uri url);
+	public record EmbedImage(Uri Url);
 
-	private static string ToJson(this object data)
-	{
-		DefaultContractResolver contractResolver = new DefaultContractResolver {
+	private static readonly JsonSerializerSettings jsonSettings = new() {
+		ContractResolver = new DefaultContractResolver() {
 			NamingStrategy = new CamelCaseNamingStrategy()
-		};
-
-
-		using(var writer = new StringWriter())
-		{
-			new JsonSerializer() {
-				ContractResolver = contractResolver,
-				NullValueHandling = NullValueHandling.Ignore
-			}.Serialize(writer, data);
-			writer.Flush();
-
-			return writer.ToString();
-		}
-	}
+		},
+		NullValueHandling = NullValueHandling.Ignore		
+	};
 
 	private static async Task Post(string webhook, object data)
 	{
-		var json = data.ToJson();
+		var json = JsonConvert.SerializeObject(data, Formatting.None, jsonSettings);
+
 		var r = await new HttpClient()
 			.PostAsync(webhook, new StringContent(json, Encoding.UTF8, "application/json"));
 
