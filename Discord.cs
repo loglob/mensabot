@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,9 +14,16 @@ namespace mensabot
 	{
 		private static string ToJson(this object data)
 		{
+			DefaultContractResolver contractResolver = new DefaultContractResolver {
+				NamingStrategy = new CamelCaseNamingStrategy()
+			};
+
+
 			using(var writer = new StringWriter())
 			{
-				new JsonSerializer().Serialize(writer, data);
+				new JsonSerializer() {
+					ContractResolver = contractResolver
+				}.Serialize(writer, data);
 				writer.Flush();
 
 				return writer.ToString();

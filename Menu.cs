@@ -22,7 +22,7 @@ namespace mensabot
 
 			[JsonProperty("description")]
 			public readonly string Name;
-			public readonly string Image;
+			public readonly string? Image;
 			public readonly double Preis;
 			public readonly double Rating;
 
@@ -49,31 +49,31 @@ namespace mensabot
 
 			[JsonProperty("fields")]
 			public EmbedField[] EmbedFields
-				=> Votes > 0 ? new EmbedField[] {
+				=> Votes > 0 ? [
 					für,
 					("rating", Stars),
 					("votes", Votes)
-				} : new EmbedField[] {
+				] : [
 					für
-				};
+				];
 
 			[JsonProperty("image", NullValueHandling=NullValueHandling.Ignore)]
-			public EmbedImage EmbedImage
-				=> string.IsNullOrEmpty(Image) ? null : new EmbedImage{url = Image};
+			public EmbedImage? EmbedImage
+				=> string.IsNullOrEmpty(Image) ? null : new EmbedImage(Image);
 
 			[JsonConstructor]
-			public Essen(string title, string price, string rating, string rating_amt, string image, string loc)
+			public Essen(string title, string? price, string? rating, string? rating_amt, string? image, string loc)
 			{
 				this.Name = title.squeeze();
-				double.TryParse(price, out this.Preis);
-				double.TryParse(rating, out this.Rating);
-				int.TryParse(rating_amt, out this.Votes);
+				_ = double.TryParse(price, out this.Preis);
+				_ = double.TryParse(rating, out this.Rating);
+				_ = int.TryParse(rating_amt, out this.Votes);
 				this.Image = string.IsNullOrEmpty(image) ? null : $"https://www.mensa-kl.de/mimg/{image}";
 				this.Ausgabe = int.TryParse(loc, out int a) ? $"Ausgabe {a}" : loc;
 			}
 
 			public override string ToString()
-				=> $"> {Name} für {Preis.ToString("0.00")}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
+				=> $"> {Name} für {Preis:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
 		}
 
 		private static string squeeze(this string str)
@@ -89,7 +89,7 @@ namespace mensabot
 				using(var tr = new StreamReader(r))
 				using(var jr = new JsonTextReader(tr))
 				{
-					return new JsonSerializer().Deserialize<Essen[]>(jr);
+					return new JsonSerializer().Deserialize<Essen[]>(jr) ?? throw new ArgumentNullException("API returned null");
 				}
 			}
 			catch(Exception ex) when (ex is JsonException || ex is FormatException)

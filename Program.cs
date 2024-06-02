@@ -1,14 +1,16 @@
 using System.Threading.Tasks;
 using System.Linq;
-using Newtonsoft.Json;
 using System.IO;
+using Newtonsoft.Json;
+
+using static System.StringComparison;
 
 namespace mensabot
 {
 
 	class Program
 	{
-		public record ServerEntry(string Webhook, string[] MenuBlacklist = null, string[] MenuWhitelist = null, string Message = null);
+		public record ServerEntry(string Webhook, string[]? MenuBlacklist = null, string[]? MenuWhitelist = null, string? Message = null);
 
 		const string DefaultMessage = "**Morgen gibt es:**";
 
@@ -21,13 +23,13 @@ namespace mensabot
 				if(! essen.Any())
 					return;
 
-				foreach(var server in new JsonSerializer().Deserialize<ServerEntry[]>(new JsonTextReader(f)))
+				foreach(var server in new JsonSerializer().Deserialize<ServerEntry[]>(new JsonTextReader(f))!)
 				{
 					await Discord.SendEmbed(server.Webhook, server.Message ?? DefaultMessage, essen
 						.Where(e => server.MenuWhitelist is null
-							|| server.MenuWhitelist.Any(m => e.Ausgabe.ToLower() == m.ToLower()))
+							|| server.MenuWhitelist.Any(m => e.Ausgabe.Equals(m, OrdinalIgnoreCase)))
 						.Where(e => server.MenuBlacklist is null
-							|| server.MenuBlacklist.All(m => e.Ausgabe.ToLower() != m.ToLower())));
+							|| server.MenuBlacklist.All(m => !e.Ausgabe.Equals(m, OrdinalIgnoreCase))));
 				}
 			}
 

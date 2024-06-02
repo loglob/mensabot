@@ -1,20 +1,13 @@
 namespace mensabot
 {
-	public class EmbedField
+	public record EmbedField(string Name, string Value, bool Inline = true)
 	{
-		public string name;
-		public string value;
-		public bool inline = true;
-
 		public static implicit operator EmbedField((string name, object value) t)
-			=> new EmbedField{ name = t.name, value = t.value.ToString() };
+			=> new(t.name, t.value.ToString()!);
 
 		public static implicit operator EmbedField((string name, object value, bool inline) t)
-			=> new EmbedField{ name = t.name, value = t.value.ToString(), inline = t.inline };
+			=> new(t.name, t.value.ToString()!, t.inline);
 	}
 
-	public class EmbedImage
-	{
-		public string url;
-	}
+	public record EmbedImage(string url);
 }
