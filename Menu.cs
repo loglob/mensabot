@@ -25,6 +25,16 @@ namespace mensabot
 			int Votes,
 			string Image)
 		{
+			private static readonly Dictionary<string, string> allergenEmojis = new(StringComparer.OrdinalIgnoreCase) {
+				{ "la", ":milk:" },
+				{ "ei", ":egg:" },
+				{ "nu", ":peanuts:" },
+				{ "s", ":pig:" },
+				{ "r", ":cow:" },
+				{ "g", ":chicken:" }
+			};
+			private static readonly Uri imageBaseUri = new Uri("https://www.mensa-kl.de/mimg/");
+
 			private string Stars
 			{
 				get
@@ -44,13 +54,10 @@ namespace mensabot
 				}
 			}
 
-			private static readonly Uri baseUri = new Uri("https://www.mensa-kl.de/mimg/");
-			public Uri? ImageUrl => string.IsNullOrEmpty(Image) ? null : new Uri(baseUri, Image); 
-
-			public string Ausgabe => int.TryParse(Loc, out int a) ? $"Ausgabe {a}" : Loc;
+			private Uri? ImageUrl => string.IsNullOrEmpty(Image) ? null : new Uri(imageBaseUri, Image);
 
 			/** Processes `RawTitle` so that each group of parenthesis is filtered for the given allergens only */
-			private string ProcessTitle(HashSet<string> allergens)
+			private string processTitle(HashSet<string> allergens)
 			{
 				StringBuilder res = new();
 
@@ -73,35 +80,55 @@ namespace mensabot
 
 						res.Append(RawTitle, off, n);
 					}
-					
+
 					int r = RawTitle.IndexOf(')', l);
 
 					if(r < 0)
 						throw new FormatException("Menu title has unmatched parentheses");
 
+					off = r + 1;
 					var al = RawTitle.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Contains).ToList();
 
-					if(al.Count > 0)
+					if(al.Count == 0)
+						continue;
+
+					res.Append(' ');
+
+					// print emoji where applicable
+					for (int i = 0; i < al.Count;)
 					{
-						res.Append(" *(");
-						bool head = true;
-
-						foreach (var a in al)
+						if(allergenEmojis.TryGetValue(al[i], out var emoji))
 						{
-							if(!head)
-								res.Append(',');
-							res.Append(a);
-							head = false;
-						}
+							al.RemoveAt(i);
 
-						res.Append(")*");
+							res.Append(emoji);
+						}
+						else
+							++i;
 					}
 
-					off = r + 1;
+					if(al.Count == 0)
+						continue;
+
+					// print shorthands for the rest
+					res.Append("*(");
+					bool head = true;
+
+					foreach (var a in al)
+					{
+						if(!head)
+							res.Append(',');
+						res.Append(a);
+						head = false;
+					}
+
+					res.Append(")*");
 				}
 
 				return res.ToString();
 			}
+
+			public string Ausgabe => int.TryParse(Loc, out int a) ? $"Ausgabe {a}" : Loc;
 
 			public override string ToString()
 				=> $"> {RawTitle} für {Price:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
@@ -112,7 +139,7 @@ namespace mensabot
 
 				return new (
 					Ausgabe,
-					ProcessTitle(allergens),
+					processTitle(allergens),
 					Votes > 0 ? [
 						für,
 						("rating", Stars),
