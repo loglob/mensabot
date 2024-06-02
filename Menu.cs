@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.IO;
 using System.Collections.Generic;
+using static mensabot.Discord;
+using System.Text;
+using System.Linq;
 
 namespace mensabot
 {
@@ -12,21 +15,17 @@ namespace mensabot
 	{
 		private const string api = "https://www.mensa-kl.de/api.php?date=1&format=json";
 
-		[JsonObject(MemberSerialization.OptIn)]
-		public class Essen
+		public record Essen(
+			string Loc,
+			[property: JsonProperty("title_with_additives")]
+			string RawTitle,
+			double Price,
+			double Rating,
+			[property: JsonProperty("rating_amt")]
+			int Votes,
+			string Image)
 		{
-			public readonly int Votes;
-
-			[JsonProperty("title")]
-			public readonly string Ausgabe;
-
-			[JsonProperty("description")]
-			public readonly string Name;
-			public readonly string? Image;
-			public readonly double Preis;
-			public readonly double Rating;
-
-			public string Stars
+			private string Stars
 			{
 				get
 				{
@@ -45,35 +44,85 @@ namespace mensabot
 				}
 			}
 
-			private EmbedField für => ("für", Preis.ToString("0.00€"));
+			private static readonly Uri baseUri = new Uri("https://www.mensa-kl.de/mimg/");
+			public Uri? ImageUrl => string.IsNullOrEmpty(Image) ? null : new Uri(baseUri, Image); 
 
-			[JsonProperty("fields")]
-			public EmbedField[] EmbedFields
-				=> Votes > 0 ? [
-					für,
-					("rating", Stars),
-					("votes", Votes)
-				] : [
-					für
-				];
+			public string Ausgabe => int.TryParse(Loc, out int a) ? $"Ausgabe {a}" : Loc;
 
-			[JsonProperty("image", NullValueHandling=NullValueHandling.Ignore)]
-			public EmbedImage? EmbedImage
-				=> string.IsNullOrEmpty(Image) ? null : new EmbedImage(Image);
-
-			[JsonConstructor]
-			public Essen(string title, string? price, string? rating, string? rating_amt, string? image, string loc)
+			/** Processes `RawTitle` so that each group of parenthesis is filtered for the given allergens only */
+			private string ProcessTitle(HashSet<string> allergens)
 			{
-				this.Name = title.squeeze();
-				_ = double.TryParse(price, out this.Preis);
-				_ = double.TryParse(rating, out this.Rating);
-				_ = int.TryParse(rating_amt, out this.Votes);
-				this.Image = string.IsNullOrEmpty(image) ? null : $"https://www.mensa-kl.de/mimg/{image}";
-				this.Ausgabe = int.TryParse(loc, out int a) ? $"Ausgabe {a}" : loc;
+				StringBuilder res = new();
+
+				for (int off = 0;;)
+				{
+					int l = RawTitle.IndexOf('(', off);
+
+					if(l < 0)
+					{
+						res.Append(RawTitle, off, RawTitle.Length - off);
+						break;
+					}
+
+					// trim trailing space left of '('
+					{
+						int n = l - off;
+
+						while(n > 0 && char.IsWhiteSpace(RawTitle[off + n - 1]))
+							--n;
+
+						res.Append(RawTitle, off, n);
+					}
+					
+					int r = RawTitle.IndexOf(')', l);
+
+					if(r < 0)
+						throw new FormatException("Menu title has unmatched parentheses");
+
+					var al = RawTitle.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Contains).ToList();
+
+					if(al.Count > 0)
+					{
+						res.Append(" *(");
+						bool head = true;
+
+						foreach (var a in al)
+						{
+							if(!head)
+								res.Append(',');
+							res.Append(a);
+							head = false;
+						}
+
+						res.Append(")*");
+					}
+
+					off = r + 1;
+				}
+
+				return res.ToString();
 			}
 
 			public override string ToString()
-				=> $"> {Name} für {Preis:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
+				=> $"> {RawTitle} für {Price:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
+
+			public Embed ToEmbed(HashSet<string> allergens)
+			{
+				EmbedField für = new("für", Price.ToString("0.00€"));
+
+				return new (
+					Ausgabe,
+					ProcessTitle(allergens),
+					Votes > 0 ? [
+						für,
+						("rating", Stars),
+						("votes", Votes)
+					] : [
+						für
+					],
+					ImageUrl is null ? null : new(ImageUrl)
+				);
+			}
 		}
 
 		private static string squeeze(this string str)

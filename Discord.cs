@@ -12,6 +12,18 @@ namespace mensabot
 {
 	static class Discord
 	{
+		public record Embed(string Title, string? Description, EmbedField[] Fields, EmbedImage? Image);
+		public record EmbedField(string Name, string Value, bool Inline = true)
+		{
+			public static implicit operator EmbedField((string name, object value) t)
+				=> new(t.name, t.value.ToString()!);
+
+			public static implicit operator EmbedField((string name, object value, bool inline) t)
+				=> new(t.name, t.value.ToString()!, t.inline);
+		}
+
+		public record EmbedImage(Uri url);
+
 		private static string ToJson(this object data)
 		{
 			DefaultContractResolver contractResolver = new DefaultContractResolver {
@@ -22,7 +34,8 @@ namespace mensabot
 			using(var writer = new StringWriter())
 			{
 				new JsonSerializer() {
-					ContractResolver = contractResolver
+					ContractResolver = contractResolver,
+					NullValueHandling = NullValueHandling.Ignore
 				}.Serialize(writer, data);
 				writer.Flush();
 
@@ -39,15 +52,15 @@ namespace mensabot
 			if(!r.IsSuccessStatusCode)
 			{
 				Console.WriteLine($"Failed to POST {webhook}, Response:\n{r}");
-				Console.Write($"Tried to send content: {json}");
+				Console.WriteLine($"Tried to send content: {json}");
 			}
 		}
 
-		public static async Task SendEmbed(string webhook, string msg, IEnumerable<object> embed)
+		public static async Task SendEmbed(string webhook, string msg, IEnumerable<Embed> embeds)
 		{
 			bool head = true;
 
-			foreach(var ch in embed.Chunk(10))
+			foreach(var ch in embeds.Chunk(10))
 			{
 				var post = new Dictionary<string,object>{
 					{ "username", "Mensa Bot" },
