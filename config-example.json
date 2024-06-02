@@ -1,0 +1,14 @@
+// Example configuration
+[
+	// you can add as many servers as you want
+	{
+		// (required) Add your webhook here
+		"webhook": "https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE",
+		// (optional) Set a custom message to write before the menu:
+		// "message": "Tomorrow's menu:",
+		// (optional) Configure which menus should be hidden:
+		"menuBlacklist": [ "bistro36", "unique", "fraunhofer" ]
+		// alternatively, configure which menus should be shown:
+		// "menuWhitelist": [ "Abend" ]
+	}
+]

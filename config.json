@@ -1,8 +1,0 @@
-// Example configuration
-[
-	{
-		"webhook": "https://discord.com/api/webhooks/YOUR_WEBHOOK_HERE",
-		// put your custom blacklist here. Check bot output to find these names. Can also be omitted completely
-		"MenuBlacklist": [ "bistro36", "unique", "fraunhofer" ]
-	}
-]
