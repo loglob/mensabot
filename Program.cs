@@ -39,7 +39,7 @@ class Program
 	static async Task MainAsync()
 	{
 		using var f = File.OpenText("./config.json");
-		var essen = await Menu.GetEssenAsync();
+		var essen = await Essen.GetMenuAsync();
 
 		if (!essen.Any())
 			return;

@@ -2,7 +2,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace mensabot;
 
-static class Discord
+public static class Discord
 {
 	public record Embed(string Title, string? Description, EmbedField[] Fields, EmbedImage? Image);
 	public record EmbedField(string Name, string Value, bool Inline = true);
