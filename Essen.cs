@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -57,14 +58,15 @@ public record Essen
 	private string processTitle(Filter allergens)
 	{
 		StringBuilder res = new();
+		var title = WebUtility.HtmlDecode(RawTitle);
 
 		for (int off = 0;;)
 		{
-			int l = RawTitle.IndexOf('(', off);
+			int l = title.IndexOf('(', off);
 
 			if(l < 0)
 			{
-				res.Append(RawTitle, off, RawTitle.Length - off);
+				res.Append(title, off, title.Length - off);
 				break;
 			}
 
@@ -72,19 +74,19 @@ public record Essen
 			{
 				int n = l - off;
 
-				while(n > 0 && char.IsWhiteSpace(RawTitle[off + n - 1]))
+				while(n > 0 && char.IsWhiteSpace(title[off + n - 1]))
 					--n;
 
-				res.Append(RawTitle, off, n);
+				res.Append(title, off, n);
 			}
 
-			int r = RawTitle.IndexOf(')', l);
+			int r = title.IndexOf(')', l);
 
 			if(r < 0)
 				throw new FormatException("Menu title has unmatched parentheses");
 
 			off = r + 1;
-			var al = RawTitle.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Allows).ToList();
+			var al = title.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Allows).ToList();
 
 			if(al.Count == 0)
 				continue;
