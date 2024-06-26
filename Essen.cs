@@ -16,7 +16,7 @@ public record Essen
 	string Loc,
 	[property: JsonProperty("title_with_additives")]
 	string RawTitle,
-	double Price,
+	double? Price,
 	double Rating,
 	[property: JsonProperty("rating_amt")]
 	int Votes,
@@ -139,7 +139,8 @@ public record Essen
 			using(var tr = new StreamReader(r))
 			using(var jr = new JsonTextReader(tr))
 			{
-				return new JsonSerializer().Deserialize<Essen[]>(jr) ?? throw new ArgumentNullException("API returned null");
+				return new JsonSerializer().Deserialize<Essen[]>(jr)
+					?? throw new ArgumentNullException("API returned null");
 			}
 		}
 		catch(Exception ex) when (ex is JsonException || ex is FormatException)
@@ -149,23 +150,24 @@ public record Essen
 
 	}
 
+	private string PriceString
+		=> Price.HasValue ? Price.Value.ToString("0.00€") : "???";
+
 	public override string ToString()
-		=> $"> {RawTitle} für {Price:0.00}€ an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
+		=> $"> {RawTitle} für {PriceString} an {Ausgabe}\n> {Stars} (aus {Votes} Stimmen)\n";
 
 	public Embed ToEmbed(Filter allergens)
 	{
-		EmbedField für = new("für", Price.ToString("0.00€"));
+		EmbedField für = new("für", PriceString);
 
 		return new (
 			Ausgabe,
 			processTitle(allergens),
-			Votes > 0 ? [
-				für,
-				new("rating", Stars),
-				new("votes", Votes.ToString())
-			] : [
-				für
-			],
+			(new EmbedField?[]{
+				Price.HasValue ? new("für", PriceString) : null,
+				Votes > 0 ? new("rating", Stars) : null,
+				Votes > 0 ? new("votes", Votes.ToString()) : null
+			}).Where(x => x is not null).ToArray()!,
 			ImageUrl is null ? null : new(ImageUrl)
 		);
 	}
