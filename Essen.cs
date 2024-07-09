@@ -83,7 +83,13 @@ public record Essen
 			int r = title.IndexOf(')', l);
 
 			if(r < 0)
-				throw new FormatException("Menu title has unmatched parentheses");
+			{
+				// recover by consuming until next whitespace
+				r = l + title.Skip(l).TakeWhile(c => !char.IsWhiteSpace(c)).Count() - 1;
+				Console.Error.WriteLine($"Bad menu title with unmatched parens: {title}");
+			}
+			else if(title.IndexOf('(', l + 1, r - l - 1) > 0)
+				Console.Error.WriteLine($"Bad menu title with nested parens: {title}");
 
 			off = r + 1;
 			var al = title.Substring(l + 1, r - l - 1).Split(',').Where(allergens.Allows).ToList();
