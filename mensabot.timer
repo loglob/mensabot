@@ -1,0 +1,9 @@
+[Unit]
+Description=Triggers mensabot at 3pm
+
+[Timer]
+OnCalendar=*-*-* 15:00:00
+Persistent=yes
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Mensabot Discord Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+DynamicUser=yes
+ExecStart=dotnet run
+# you need to change this path!
+WorkingDirectory=/srv/mensabot/
