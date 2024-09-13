@@ -5,7 +5,9 @@ Wants=network.target
 
 [Service]
 Type=simple
-DynamicUser=yes
 ExecStart=dotnet run
+# You need to create or change this user
+# note that systemD dynamic user won't work because the home dir needs to be writable
+User=mensabot
 # you need to change this path!
 WorkingDirectory=/srv/mensabot/
