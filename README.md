@@ -6,6 +6,7 @@ Uses the www.mensa-kl.de API.
 - Create a webhook on your Discord server
 - Edit `config.json` and add that webhook
 
-Executing `run.sh` will now send a message with tomorrow's menu to the webhook's channel.
+Executing `dotnet run` will now send a message with tomorrow's menu to the webhook's channel.
 
-Use crontab or some other method to automatically execute `run.sh`.
+An example systemD service and timer config is included.
+Note that `mensabot.service` will need to be edited before use.
